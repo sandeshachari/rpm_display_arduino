@@ -10,10 +10,10 @@ float fRpm = 0.0F;
 
 
 void rpm_setup() {
-  if(RPM_PULSE_INPUT_PIN == digitalPinToInterrupt(RPM_PULSE_INPUT_PIN))
+  if(0 == digitalPinToInterrupt(RPM_PULSE_INPUT_PIN))
   {
     /* Interrupt number successfully assigned for RPM pulse input pin */
-    pinMode(RPM_PULSE_INPUT_PIN, INPUT_PULLUP);
+    pinMode(RPM_PULSE_INPUT_PIN, RPM_PULSE_INPUT_PIN_MODE);
     /* Install ISR for rising edge of pulse */
     attachInterrupt(digitalPinToInterrupt(RPM_PULSE_INPUT_PIN), rpm_sense_isr, RPM_PULSE_TRIGGER);
   }
@@ -59,7 +59,6 @@ void rpm_sense_isr()
 
   /* Reset timeout count */
   ulRpmTimeoutCount = 0U;
-
 }
 
 
@@ -81,7 +80,7 @@ void rpm_loop(void)
     ulRpmTimeoutCount++;
     if(ulRpmTimeoutCount >= (RPM_PULSE_TIMEOUT_MS/TEN_MS))
     {
-      ulRpmTimeoutCount = (RPM_PULSE_TIMEOUT_MS/TEN_MS);
+      ulRpmTimeoutCount = 0U;
       /* Reset RPM to 0 */
       fRpm = 0.0F;
       /* Reset count of pulses (in one rotation) */
@@ -110,9 +109,9 @@ void rpm_simulate(void)
 
   ulRpmGenTime_ms = millis();
 
-  if( (ulRpmGenTime_ms - ulRpmGenTimeOld_ms) >= (60000U/RPM_SET_POINT/2U) )
+  if( (ulRpmGenTime_ms - ulRpmGenTimeOld_ms) >= (uint32_t)(60000.0F/RPM_SET_POINT/2.0F/N_RPM_PULSE_PER_REV) )
   {
-    bState != bState;
+    bState = !bState;
     if(bState)
     {
       digitalWrite(GENERATE_RPM_PIN, 1U);

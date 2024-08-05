@@ -2,10 +2,6 @@
 #include <TM1637Display.h>
 #include "config.h"
 
-/* Module connection pins (Digital Pins) */
-#define CLK           (21U)
-#define DIO           (20U)
-
 
 TM1637Display display(CLK, DIO);
 
