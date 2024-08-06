@@ -3,7 +3,7 @@
 #include "config.h"
 
 
-TM1637Display display(CLK, DIO);
+TM1637Display display(TM1637_DISPLAY_CLK_PIN, TM1637_DISPLAY_DIO_PIN);
 
 void display_setup() {
     /* Set highest brightness. 0: lowest, 7: highest */
@@ -21,7 +21,7 @@ void display_loop() {
   ulDisplayUpdTime_ms = millis();
 
   /* Check if 100 ms time interval is over. The enclosed logic inside if loop runs every 100 ms. */
-  if((ulDisplayUpdTime_ms - ulDisplayUpdTimeOld_ms) >= DISPLAY_UPDATE_RATE_MS)
+  if((ulDisplayUpdTime_ms - ulDisplayUpdTimeOld_ms) >= TM1637_DISPLAY_UPDATE_RATE_MS)
   {
     u32NumToDisplay = get_cur_rpm_scaled();
 #if 0
@@ -36,7 +36,14 @@ void display_loop() {
        leading zero = false
        length = 4 digits
        pos = 0 i.e. MSB is left most digit */
-    display.showNumberDecEx(u32NumToDisplay, 0b01000000, false, 4U, 0U);
+    if(0U == u32NumToDisplay)
+    {
+      display.showNumberDecEx(u32NumToDisplay, 0b01000000, true, 4U, 0U);
+    }
+    else
+    {
+      display.showNumberDecEx(u32NumToDisplay, 0b01000000, false, 4U, 0U);
+    }
 #endif
 
     /* Update old time */

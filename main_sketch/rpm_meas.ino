@@ -2,11 +2,13 @@
 #include "config.h"
 
 /* Local variables */
+static float fRpm = 0.0F;
 static unsigned int ulRpmTimeoutCount = 0U;
 static unsigned int uiRpmPulseCount = 0U;
+static uint32_t u32RpmPulseCount = 0U;
 
 /* Global variables */
-float fRpm = 0.0F;
+
 
 
 void rpm_setup() {
@@ -36,14 +38,18 @@ void rpm_sense_isr()
 
   ulRpmPulseTime_ms = millis();
 
-  uiRpmPulseCount++;
-  /* Check if one rotation is complete */
-  if(N_RPM_PULSE_PER_REV <= uiRpmPulseCount)
+  u32RpmPulseCount++;
+
+  if(u32RpmPulseCount >= N_RPM_PULSE_PER_REV)
   {
-    /* Reset pulse count */
-    uiRpmPulseCount = 0U;
-    /* Calculate RPM */
-    fRpmRaw = 60000.0F/(float)(ulRpmPulseTime_ms - ulRpmPulseTimeOld_ms);
+    u32RpmPulseCount = 0U;
+
+    if((ulRpmPulseTime_ms - ulRpmPulseTimeOld_ms) != 0U)
+    {
+      /* Calculate RPM */
+      fRpmRaw = 60000.0F/(float)((ulRpmPulseTime_ms - ulRpmPulseTimeOld_ms));
+    }
+
 
 #if(USE_FILTER_FOR_RPM_MEAS == 1)
     fRpm = IIR_COEF_RPM_FILTER*fRpmRaw + (1.0F - IIR_COEF_RPM_FILTER)*fRpm;
@@ -55,7 +61,10 @@ void rpm_sense_isr()
 
     /* Update rotation time */
     ulRpmPulseTimeOld_ms = ulRpmPulseTime_ms;
+
   }
+
+
 
   /* Reset timeout count */
   ulRpmTimeoutCount = 0U;
@@ -74,7 +83,7 @@ void rpm_loop(void)
   /* Check if 10 ms time interval is over. The enclosed logic inside if loop runs every 10 ms. */
   if((ulRpmPulseTimeout_ms - ulRpmPulseTimeoutOld_ms) >= TEN_MS)
   {
-    /* Update  old time */
+    /* Update old time */
     ulRpmPulseTimeoutOld_ms = ulRpmPulseTimeout_ms;
     
     ulRpmTimeoutCount++;
@@ -83,10 +92,10 @@ void rpm_loop(void)
       ulRpmTimeoutCount = 0U;
       /* Reset RPM to 0 */
       fRpm = 0.0F;
-      /* Reset count of pulses (in one rotation) */
-      uiRpmPulseCount = 0U;
+      u32RpmPulseCount = 0U;
     }
   }
+
 
 #if(GENERATE_RPM == 1)
   rpm_simulate();
